@@ -95,30 +95,3 @@ jobs:
           asset_path: |
             ./artifact/**/*.zip
             ./artifact/**/*.deb
-
-      - name: Upload release archive to repo.jellyfin.org
-        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
-        with:
-          host: ${{ secrets.deploy-host }}
-          username: ${{ secrets.deploy-user }}
-          key: ${{ secrets.deploy-key }}
-          source: artifact/*
-          strip_components: 1
-          target: /srv/incoming/ffmpeg/${{ steps.set_version.outputs.no-v }}/${{ inputs.distro }}/${{ matrix.arch }}/${{ matrix.release }}
-
-      - name: Move incoming release into repository
-        uses: appleboy/ssh-action@2ead5e36573f08b82fbfce1504f1a4b05a647c6f # v1.2.2
-        with:
-          host: ${{ secrets.deploy-host }}
-          username: ${{ secrets.deploy-user }}
-          key: ${{ secrets.deploy-key }}
-          envs: JELLYFIN_VERSION
-          script_stop: true
-          script: |
-            # Create the target folder and move arch directory into it
-            sudo mkdir -p /srv/repository/main/ffmpeg/${{ inputs.distro }}/${{ steps.set_version.outputs.major }}.x/${{ steps.set_version.outputs.no-v }}/${{ matrix.arch }}
-            sudo mv -t /srv/repository/main/ffmpeg/${{ inputs.distro }}/${{ steps.set_version.outputs.major }}.x/${{ steps.set_version.outputs.no-v }}/${{ matrix.arch }}/ /srv/incoming/ffmpeg/${{ steps.set_version.outputs.no-v }}/${{ inputs.distro }}/${{ matrix.arch }}/${{ matrix.release }}/*
-            sudo chown -R root:root /srv/repository/main/ffmpeg/${{ inputs.distro }}/${{ steps.set_version.outputs.major }}.x/${{ steps.set_version.outputs.no-v }}/${{ matrix.arch }}
-            # Update symlink for latest-X.x
-            sudo rm -f /srv/repository/main/ffmpeg/${{ inputs.distro }}/latest-${{ steps.set_version.outputs.major }}.x || true
-            sudo ln -s /srv/repository/main/ffmpeg/${{ inputs.distro }}/${{ steps.set_version.outputs.major }}.x/${{ steps.set_version.outputs.no-v }} /srv/repository/main/ffmpeg/${{ inputs.distro }}/latest-${{ steps.set_version.outputs.major }}.x || true
