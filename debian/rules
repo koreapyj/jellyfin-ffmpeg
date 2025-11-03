@@ -27,6 +27,7 @@ CONFIG := --prefix=${TARGET_DIR} \
 	--enable-libdrm \
 	--enable-libxml2 \
 	--enable-libass \
+	--enable-libaribcaption \
 	--enable-libfreetype \
 	--enable-libfribidi \
 	--enable-libfontconfig \

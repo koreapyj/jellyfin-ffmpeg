@@ -178,6 +178,20 @@ prepare_extra_common() {
     popd
     popd
 
+    # LIBARIBCAPTION
+    pushd ${SOURCE_DIR}
+    git clone -b v1.1.1 --depth=1 https://github.com/xqq/libaribcaption.git
+    pushd libaribcaption
+    cmake \
+        ${CMAKE_TOOLCHAIN_OPT} \
+        -DCMAKE_INSTALL_PREFIX=${TARGET_DIR} \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DARIBCC_SHARED_LIBRARY:BOOL=ON
+    make -j$(nproc) && make install && make install DESTDIR=${SOURCE_DIR}/libaribcaption
+    echo "libaribcaption${TARGET_DIR}/lib/libaribcaption.so* usr/lib/jellyfin-ffmpeg/lib" >> ${DPKG_INSTALL_LIST}
+    popd
+    popd
+
     # FFTW3
     pushd ${SOURCE_DIR}
     mkdir fftw3

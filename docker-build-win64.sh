@@ -244,6 +244,18 @@ make -j$(nproc)
 make install
 popd
 
+# LIBARIBCAPTION
+git clone -b v1.1.1 --depth=1 https://github.com/xqq/libaribcaption.git
+pushd libaribcaption
+cmake \
+    -DCMAKE_TOOLCHAIN_FILE=${FF_CMAKE_TOOLCHAIN} \
+    -DCMAKE_INSTALL_PREFIX=${FF_DEPS_PREFIX} \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DARIBCC_SHARED_LIBRARY:BOOL=ON
+make -j$(nproc)
+make install
+popd
+
 # LIBBLURAY
 git clone -b 1.4.0 --depth=1 https://code.videolan.org/videolan/libbluray.git
 sed -i 's/dec_init/libbluray_dec_init/g' libbluray/src/libbluray/disc/*.{c,h}
@@ -620,6 +632,7 @@ fi
     --enable-libfontconfig \
     --enable-libharfbuzz \
     --enable-libass \
+	--enable-libaribcaption \
     --enable-libbluray \
     --enable-libmp3lame \
     --enable-libopus \

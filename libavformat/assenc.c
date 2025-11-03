@@ -42,6 +42,7 @@ typedef struct ASSContext {
     int cache_size;
     int ssa_mode;
     int ignore_readorder;
+    int allow_multi_digit_event_hours;
     uint8_t *trailer;
     size_t trailer_size;
 } ASSContext;
@@ -182,8 +183,10 @@ static int write_packet(AVFormatContext *s, AVPacket *pkt)
     hh2 = (int)(end   / 360000);    mm2 = (int)(end   / 6000) % 60;
     ss1 = (int)(start / 100) % 60;  ms1 = (int)(start % 100);
     ss2 = (int)(end   / 100) % 60;  ms2 = (int)(end   % 100);
-    if (hh1 > 9) hh1 = 9, mm1 = 59, ss1 = 59, ms1 = 99;
-    if (hh2 > 9) hh2 = 9, mm2 = 59, ss2 = 59, ms2 = 99;
+    if (!ass->allow_multi_digit_event_hours) {
+        if (hh1 > 9) hh1 = 9, mm1 = 59, ss1 = 59, ms1 = 99;
+        if (hh2 > 9) hh2 = 9, mm2 = 59, ss2 = 59, ms2 = 99;
+    }
 
     text_len = strlen(p);
     while (text_len > 0 && p[text_len - 1] == '\r' || p[text_len - 1] == '\n')
@@ -219,6 +222,7 @@ static int write_trailer(AVFormatContext *s)
 #define E AV_OPT_FLAG_ENCODING_PARAM
 static const AVOption options[] = {
     { "ignore_readorder", "write events immediately, even if they're out-of-order", OFFSET(ignore_readorder), AV_OPT_TYPE_BOOL, {.i64 = 0}, 0, 1, E },
+    { "allow_multi_digit_event_hours", "allow multi-digits hours in event lines to support more than 10 hours. it may break ass specs.", OFFSET(allow_multi_digit_event_hours), AV_OPT_TYPE_BOOL, {.i64 = 0}, 0, 1, E },
     { NULL },
 };
 

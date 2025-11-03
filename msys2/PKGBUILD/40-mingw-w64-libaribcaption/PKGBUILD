@@ -1,0 +1,50 @@
+_realname=libaribcaption
+pkgbase=mingw-w64-jellyfin-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=1.1.1
+pkgrel=1
+pkgdesc="Portable ARIB STD-B24 Caption Decoder/Renderer (mingw-w64)"
+arch=('any')
+mingw_arch=('mingw32' 'mingw64' 'ucrt64' 'clang64' 'clangarm64')
+url='https://github.com/xqq/libaribcaption'
+msys2_references=(
+  "cpe: cpe:/a:xqq:libaribcaption"
+)
+license=('spdx:ISC')
+makedepends=("${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-cc"
+              $( [[ "${CARCH}" != "i686" \
+                && "${CARCH}" != "x86_64" ]] \
+                || echo "${MINGW_PACKAGE_PREFIX}-nasm" ))
+depends=("${MINGW_PACKAGE_PREFIX}-jellyfin-fontconfig"
+         "${MINGW_PACKAGE_PREFIX}-jellyfin-freetype")
+source=(${url}/archive/refs/tags/v${pkgver}.tar.gz)
+sha256sums=('SKIP')
+
+export MINGW_TOOLCHAIN_PREFIX="${MINGW_PREFIX}"
+export FF_MINGW_PREFIX="${MINGW_TOOLCHAIN_PREFIX}/ffbuild"
+
+prepare() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+}
+
+build() {
+  export CMAKE_PREFIX_PATH="${FF_MINGW_PREFIX}"
+  export PKG_CONFIG_PATH="${FF_MINGW_PREFIX}/lib/pkgconfig:${PKG_CONFIG_PATH}"
+
+  [[ -d "${srcdir}/build-${MSYSTEM}-static" ]] && rm -rf "${srcdir}/build-${MSYSTEM}-static"
+  mkdir -p "${srcdir}/build-${MSYSTEM}-static" && cd "${srcdir}/build-${MSYSTEM}-static"
+
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    ${MINGW_TOOLCHAIN_PREFIX}/bin/cmake \
+      -DCMAKE_INSTALL_PREFIX=${FF_MINGW_PREFIX} \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DARIBCC_SHARED_LIBRARY:BOOL=ON \
+      ../v${pkgver}
+  make
+}
+
+package() {
+  cd "${srcdir}/build-${MSYSTEM}-static"
+  make DESTDIR="${pkgdir}" install
+}
